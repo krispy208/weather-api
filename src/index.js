@@ -8,7 +8,8 @@ const rl = readline.createInterface({
 
 rl.question(`Enter a city code to get its weather: `, async (cityCode) => {
   try {
-    const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${cityCode.trim()}?key=${process.env.WEATHER_API_KEY}`);
+    const date = new Date().toISOString()
+    const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${cityCode.trim()}/${date}?key=${process.env.WEATHER_API_KEY}&include=days&elements=tempmax,tempmin,temp`);
     
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
@@ -16,7 +17,11 @@ rl.question(`Enter a city code to get its weather: `, async (cityCode) => {
 
     const data = await response.json();
 
-    console.log(data);
+    const { tempmax, tempmin, temp } = data.days[0]
+    console.log(`The current tempature is ${temp}F`);
+    console.log(`Today's maximum tempature is ${tempmax}F`)
+    console.log(`Today's minimum tempature is ${tempmin}F\n`)
+    rl.setPrompt("Enter another city code or done to exit: ");
     rl.setPrompt("Enter another city code or done to exit: ");
     rl.prompt();
     rl.on("line", async (cityCode) => {
@@ -24,20 +29,25 @@ rl.question(`Enter a city code to get its weather: `, async (cityCode) => {
         rl.close();
       }
       else {
-        const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${cityCode.trim()}?key=${process.env.WEATHER_API_KEY}`);
+        const date = new Date().toISOString()
+        const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${cityCode.trim()}/${date}?key=${process.env.WEATHER_API_KEY}&include=days&elements=tempmax,tempmin,temp`);
         
         if (!response.ok) {
           throw new Error(`Response status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log(data);
+        const { tempmax, tempmin, temp } = data.days[0]
+        console.log(`The current tempature is ${temp}F`);
+        console.log(`Today's maximum tempature is ${tempmax}F`)
+        console.log(`Today's minimum tempature is ${tempmin}F\n`)
         rl.setPrompt("Enter another city code or done to exit: ");
         rl.prompt();
       }
     });
     }
   catch (err) {
-    console.error(`Error: ${err}`)
+    console.error(`Invalid input`)
+    rl.close()
   }
 });
