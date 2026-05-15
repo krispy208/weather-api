@@ -15,7 +15,16 @@ const server = http.createServer( async (req, res) => {
       const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${cityCode.trim()}/${date}?key=${process.env.WEATHER_API_KEY}&include=days&elements=tempmax,tempmin,temp`);
 
       if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
+        if (response.status === 400) {
+          res.statusCode = 400;
+          throw new Error("Invalid city code, please enter a valid city code.");
+        }
+        else if (response.status === 500) {
+          res.statusCode = 500;
+          throw new Error("An internal server error occurred");
+        }
+        res.statusCode = 500;
+        throw new Error(`An error occurred. Please try again later.`);
       }
       const data = await response.json();
       const { tempmax, tempmin, temp } = data.days[0];
@@ -30,12 +39,18 @@ const server = http.createServer( async (req, res) => {
       res.end(JSON.stringify(tempatureData));
     }
     catch (err) {
-      console.error(err)
+      res.end(JSON.stringify({
+        message: err.message
+      }))
     }
     
   }
   else {
-
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 404;
+    res.end(JSON.stringify({
+      message: 'The requested route does not exist'
+    }));
   }
   
 });
